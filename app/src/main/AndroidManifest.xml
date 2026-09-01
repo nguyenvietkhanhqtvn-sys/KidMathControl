@@ -25,6 +25,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Khai báo Service giám sát ngầm -->
+        <service 
+            android:name=".AppMonitorService"
+            android:enabled="true"
+            android:exported="false" />
+
     </application>
 
 </manifest>
