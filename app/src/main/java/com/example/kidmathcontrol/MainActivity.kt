@@ -1,7 +1,11 @@
 package com.example.kidmathcontrol
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +28,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Kiểm tra quyền hiển thị màn hình khóa đè và khởi chạy Service đếm giờ
+        checkOverlayPermission()
+        startAppMonitorService()
+
         val layoutPin = findViewById<LinearLayout>(R.id.layoutPinSection)
         val layoutAdmin = findViewById<LinearLayout>(R.id.layoutAdminSection)
         val edtPin = findViewById<EditText>(R.id.edtPin)
@@ -34,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         val btnAdd = findViewById<Button>(R.id.btnAddMath)
         val rvMath = findViewById<RecyclerView>(R.id.rvMathList)
 
-        // Load bài toán đã lưu
+        // Load bài toán đã lưu từ trước
         loadMathData()
 
         adapter = MathAdapter(mathList) { position ->
@@ -45,7 +53,7 @@ class MainActivity : AppCompatActivity() {
         rvMath.layoutManager = LinearLayoutManager(this)
         rvMath.adapter = adapter
 
-        // Đăng nhập Admin
+        // Xử lý nút Đăng nhập Admin
         btnLogin.setOnClickListener {
             if (edtPin.text.toString() == adminPin) {
                 layoutPin.visibility = View.GONE
@@ -56,7 +64,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Thêm bài toán mới
+        // Xử lý nút Thêm bài toán mới
         btnAdd.setOnClickListener {
             val q = edtQuestion.text.toString().trim()
             val a = edtAnswer.text.toString().trim()
@@ -71,6 +79,27 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Vui lòng nhập đủ đề bài và đáp án", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    // Hàm xin quyền "Hiển thị đè ứng dụng khác" (System Alert Window)
+    private fun checkOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            startActivity(intent)
+        }
+    }
+
+    // Hàm khởi chạy Service đếm ngầm 10 phút
+    private fun startAppMonitorService() {
+        val intent = Intent(this, AppMonitorService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
         }
     }
 
